@@ -1,0 +1,49 @@
+# ======================
+# Go binaries
+# ======================
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# ======================
+# Coverage & profiling
+# ======================
+coverage.*
+*.coverprofile
+profile.cov
+
+# ======================
+# Air (live reload)
+# ======================
+tmp/
+.air/
+.air.toml.tmp
+
+# ======================
+# Go workspace
+# ======================
+go.work
+go.work.sum
+
+# ======================
+# Environment variables
+# ======================
+.env
+.env.*
+!.env.example
+
+# ======================
+# IDE / Editor
+# ======================
+.vscode/
+.idea/
+
+# ======================
+# OS
+# ======================
+.DS_Store
+Thumbs.db
