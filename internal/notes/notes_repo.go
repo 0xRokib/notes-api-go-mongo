@@ -18,7 +18,7 @@ func NewRepo(db *mongo.Database) *Repo {
 	}
 }
 
-func (r *Repo) CreateNote(ctx context.Context, note Note) (Note, error) {
+func (r *Repo) Create(ctx context.Context, note Note) (Note, error) {
 	opCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
