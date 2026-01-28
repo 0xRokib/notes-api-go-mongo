@@ -44,3 +44,16 @@ func (h *Handler) CreateNote(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusCreated, created)
 }
+
+func (h *Handler) ListNotes(ctx *gin.Context) {
+	notes, err := h.repo.List(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "fauled to get all note here",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"notes": notes,
+	})
+}
