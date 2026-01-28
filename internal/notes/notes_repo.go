@@ -66,3 +66,43 @@ func (r *Repo) GetByID(ctx context.Context, id primitive.ObjectID) (Note, error)
 
 	return note, nil
 }
+
+func (r *Repo) UpdateByID(ctx context.Context, id primitive.ObjectID, update UpdateNoteRequest) (Note, error) {
+	opCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	filter := bson.M{"_id": id}
+	updateData := bson.M{
+		"$set": bson.M{
+			"title":     update.Title,
+			"content":   update.Content,
+			"pinned":    update.Pinned,
+			"updatedAt": time.Now().UTC(),
+		},
+	}
+	after := options.After
+	opts := options.FindOneAndUpdateOptions{
+		ReturnDocument: &after,
+	}
+	var updatedNote Note
+	err := r.coll.FindOneAndUpdate(opCtx, filter, updateData, &opts).Decode(&updatedNote)
+	if err != nil {
+		return Note{}, fmt.Errorf("update note failed: %w", err)
+	}
+	return updatedNote, nil
+
+}
+
+func (r *Repo) DeleteByID(ctx context.Context, id primitive.ObjectID) (bool, error) {
+	opCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": id}
+	res, err := r.coll.DeleteOne(opCtx, filter)
+	if err != nil {
+		return false, fmt.Errorf("delete note failed: %w", err)
+	}
+	if res.DeletedCount == 0 {
+		return false, nil
+	}
+	return true, nil
+}

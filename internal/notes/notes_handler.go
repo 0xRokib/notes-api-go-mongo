@@ -1,6 +1,7 @@
 package notes
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
@@ -83,4 +84,68 @@ func (h *Handler) GetNoteByID(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, note)
+}
+
+func (h *Handler) UpdateNoteByID(ctx *gin.Context) {
+	id := ctx.Param("id")
+	objId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid ID",
+		})
+		return
+	}
+	var req UpdateNoteRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid json",
+		})
+		return
+	}
+	updatedNote, err := h.repo.UpdateByID(ctx.Request.Context(), objId, req)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "note not found with this given ID",
+			})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to update the note",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, updatedNote)
+}
+
+func (h *Handler) DeleteNoteByID(ctx *gin.Context) {
+	opCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	id := ctx.Param("id")
+	objId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid ID",
+		})
+		return
+	}
+	delete, err := h.repo.DeleteByID(opCtx, objId)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "note not found with this given ID",
+			})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to delete the note",
+		})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"deleted": delete,
+		"message": "note deleted successfully",
+	})
+
 }
